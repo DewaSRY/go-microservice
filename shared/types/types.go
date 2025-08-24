@@ -38,6 +38,7 @@ type Routes struct {
 	Duration   float64  `json:"duration"`
 	Distance   float64  `json:"distance"`
 }
+
 type Waypoints struct {
 	Hint     string    `json:"hint"`
 	Location []float64 `json:"location"`

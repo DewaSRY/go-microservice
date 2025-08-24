@@ -1,43 +1,56 @@
 package main
 
 import (
+	"context"
 	"log"
-	"net/http"
-	httpService "ride-sharing/services/trip-service/internal/infrastructure/http"
+	"net"
+	"os"
+	"os/signal"
+	grpcHandler "ride-sharing/services/trip-service/internal/infrastructure/grpc"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
+
 	"ride-sharing/services/trip-service/internal/service"
-	"ride-sharing/shared/env"
+	"syscall"
+
+	grpcServer "google.golang.org/grpc"
 )
 
-var (
-	httpAddr = env.GetString("HTTP_ADDR", ":8083")
-)
+const GrpcAddr = ":9093"
 
 func main() {
 	log.Println("Starting API Gateway")
 
 	repository := repository.NewInMemoryRepository()
 	service := service.NewService(repository)
-	handler := httpService.HttpHandler{
-		Service: service,
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+		<-sigCh
+		cancel()
+	}()
+
+	lis, err := net.Listen("tcp", GrpcAddr)
+
+	if err != nil {
+		log.Fatalf("failed_to_listen : %v", err)
 	}
 
-	mux := http.NewServeMux()
+	grpcServer := grpcServer.NewServer()
+	grpcHandler.NewGRPCHandler(grpcServer, service)
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Hello from API Gateway"))
-	})
+	log.Printf("Starting gRPC server Trip service on port %s", lis.Addr().String())
 
-	mux.HandleFunc("POST /trip/preview", handler.HandleTripPreview)
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Printf("failed_to_serve:%v", err)
+			cancel()
+		}
+	}()
 
-	server := &http.Server{
-		Addr:    httpAddr,
-		Handler: mux,
-	}
-
-	log.Printf("Server running on %s\n", httpAddr)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Http server error: %v", err)
-	}
+	// wait for the shotdown signal
+	<-ctx.Done()
 }

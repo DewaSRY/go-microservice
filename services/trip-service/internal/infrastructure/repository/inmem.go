@@ -51,3 +51,8 @@ func (s *InMemoryRepository) GetRoute(ctx context.Context, pickup, destination *
 	return &routeResp, nil
 
 }
+
+func (r *InMemoryRepository) SaveRideFare(ctx context.Context, fare *domain.RideFareModel) error {
+	r.rideFares[fare.Id.Hex()] = fare
+	return nil
+}

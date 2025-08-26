@@ -34,6 +34,8 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 		log.Println(err)
 	}
 
+	userId := req.GetUserID()
+
 	routes := make([]*pb.Route, len(trip_route.Routes))
 
 	for i, r := range trip_route.Routes {
@@ -44,8 +46,30 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 		log.Println(err)
 	}
 
+	estimatedFares := h.service.EstimatePackagesPriceWithRoute(trip_route)
+
+	fares, err := h.service.GenerateTripFares(ctx, estimatedFares, userId)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	rideFare := make([]*pb.RideFare, len(fares))
+	for i, f := range fares {
+		rideFare[i] = mappedRideFareToProtoRideFare(f)
+	}
+
 	return &pb.PreviewTripResponse{
 		Route:     routes,
-		RideFares: []*pb.RideFare{},
+		RideFares: rideFare,
 	}, nil
+}
+
+func mappedRideFareToProtoRideFare(fare *domain.RideFareModel) *pb.RideFare {
+	return &pb.RideFare{
+		Id:               fare.Id.Hex(),
+		UserID:           fare.UserId,
+		PackageSlug:      fare.PackageSlug,
+		TotalPriceInCets: fare.TotalPriceInCents,
+	}
 }

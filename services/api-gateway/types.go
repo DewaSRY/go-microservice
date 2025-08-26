@@ -22,7 +22,7 @@ func (p *PreviewTripRequest) mappedToProto() *pb.PreviewTripRequest {
 
 func mappedLocationToCoridinate(location *types.Coordinate) *pb.Coordinate {
 	return &pb.Coordinate{
-		Latitude:   location.Latitude,
-		Longtitude: location.Longitude,
+		Latitude:  location.Latitude,
+		Longitude: location.Longitude,
 	}
 }

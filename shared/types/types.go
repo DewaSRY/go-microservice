@@ -18,6 +18,7 @@ type OsrmApiResponse struct {
 	Routes    []Routes    `json:"routes"`
 	Waypoints []Waypoints `json:"waypoints"`
 }
+
 type Legs struct {
 	Steps    []any   `json:"steps"`
 	Weight   float64 `json:"weight"`
@@ -25,6 +26,7 @@ type Legs struct {
 	Duration float64 `json:"duration"`
 	Distance float64 `json:"distance"`
 }
+
 type Geometry struct {
 	Coordinates []Coordinates `json:"coordinates"`
 	Type        string        `json:"type"`

@@ -29,7 +29,7 @@ func (r *InMemoryRepository) CreateTrip(ctx context.Context, trip *domain.TripMo
 
 func (s *InMemoryRepository) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*types.OsrmApiResponse, error) {
 	url := fmt.Sprintf(
-		"http://router.project-osrm.org/route/v1/driving/%f,%f;%f%,%f?overview=full&geometries=geojson", &pickup.Longitude, &pickup.Latitude, &destination.Longitude, &destination.Latitude)
+		"http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson", pickup.Longitude, pickup.Latitude, destination.Longitude, destination.Latitude)
 
 	res, err := http.Get(url)
 	if err != nil {

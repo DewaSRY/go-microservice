@@ -10,3 +10,11 @@ generate-proto:
 		--go_out=$(GO_OUT) \
 		--go-grpc_out=$(GO_OUT) \
 		$(PROTO_SRC)
+
+
+# Run trip-service directly
+run-trip-service:
+	go run ./services/trip-service/cmd/main.go
+
+run-test: 
+	go test -v ./...

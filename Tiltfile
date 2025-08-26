@@ -74,13 +74,13 @@ k8s_resource('trip-service', resource_deps=['trip-service-compile'], labels="ser
 ### End of Trip Service ###
 ### Web Frontend ###
 
-docker_build(
-  'ride-sharing/web',
-  '.',
-  dockerfile='./infra/development/docker/web.Dockerfile',
-)
+# docker_build(
+#   'ride-sharing/web',
+#   '.',
+#   dockerfile='./infra/development/docker/web.Dockerfile',
+# )
 
-k8s_yaml('./infra/development/k8s/web-deployment.yaml')
-k8s_resource('web', port_forwards=3000, labels="frontend")
+# k8s_yaml('./infra/development/k8s/web-deployment.yaml')
+# k8s_resource('web', port_forwards=3000, labels="frontend")
 
 ### End of Web Frontend ###

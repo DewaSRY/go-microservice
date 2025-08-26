@@ -5,9 +5,9 @@ import (
 	"log"
 	"ride-sharing/services/trip-service/internal/domain"
 	pb "ride-sharing/shared/proto/trip"
-	"ride-sharing/shared/types"
 
-	"dario.cat/mergo"
+	"ride-sharing/shared/mapper"
+
 	"google.golang.org/grpc"
 )
 
@@ -25,8 +25,8 @@ func NewGRPCHandler(server *grpc.Server, service domain.TripService) *GRPCHandle
 }
 
 func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripRequest) (*pb.PreviewTripResponse, error) {
-	pickup := mappedLocationToCoridinate(req.GetStartLocation())
-	destination := mappedLocationToCoridinate(req.GetEndLocation())
+	pickup := mapper.MappedLocationToCoridinate(req.GetStartLocation())
+	destination := mapper.MappedLocationToCoridinate(req.GetEndLocation())
 
 	trip_route, err := h.service.GetRoute(ctx, pickup, destination)
 
@@ -34,30 +34,18 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 		log.Println(err)
 	}
 
-	route, err := mappedTripRouteToProtoRoute(trip_route)
+	routes := make([]*pb.Route, len(trip_route.Routes))
+
+	for i, r := range trip_route.Routes {
+		routes[i] = mapper.MappedRouteToProtoroute(&r)
+	}
 
 	if err != nil {
 		log.Println(err)
 	}
 
 	return &pb.PreviewTripResponse{
-		Route:     route,
+		Route:     routes,
 		RideFares: []*pb.RideFare{},
 	}, nil
-}
-
-func mappedLocationToCoridinate(location *pb.Coordinate) *types.Coordinate {
-	return &types.Coordinate{
-		Latitude:  location.Latitude,
-		Longitude: location.Longtitude,
-	}
-}
-
-func mappedTripRouteToProtoRoute(trip_route *types.OsrmApiResponse) (*pb.Route, error) {
-	var route pb.Route
-
-	if err := mergo.Merge(&route, trip_route.Routes); err != nil {
-		return nil, err
-	}
-	return &route, nil
 }

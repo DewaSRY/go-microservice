@@ -18,12 +18,13 @@ import (
 const GrpcAddr = ":9093"
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
 	log.Println("Starting API Gateway")
 
 	repository := repository.NewInMemoryRepository()
 	service := service.NewService(repository)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	go func() {
@@ -51,6 +52,5 @@ func main() {
 		}
 	}()
 
-	// wait for the shotdown signal
 	<-ctx.Done()
 }

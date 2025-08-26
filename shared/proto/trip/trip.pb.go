@@ -84,7 +84,7 @@ func (x *PreviewTripRequest) GetEndLocation() *Coordinate {
 type PreviewTripResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TripID        string                 `protobuf:"bytes,1,opt,name=tripID,proto3" json:"tripID,omitempty"`
-	Route         *Route                 `protobuf:"bytes,2,opt,name=route,proto3" json:"route,omitempty"`
+	Route         []*Route               `protobuf:"bytes,2,rep,name=route,proto3" json:"route,omitempty"`
 	RideFares     []*RideFare            `protobuf:"bytes,3,rep,name=rideFares,proto3" json:"rideFares,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -127,7 +127,7 @@ func (x *PreviewTripResponse) GetTripID() string {
 	return ""
 }
 
-func (x *PreviewTripResponse) GetRoute() *Route {
+func (x *PreviewTripResponse) GetRoute() []*Route {
 	if x != nil {
 		return x.Route
 	}
@@ -144,7 +144,7 @@ func (x *PreviewTripResponse) GetRideFares() []*RideFare {
 type Coordinate struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Latitude      float64                `protobuf:"fixed64,1,opt,name=latitude,proto3" json:"latitude,omitempty"`
-	Longtitude    float64                `protobuf:"fixed64,2,opt,name=longtitude,proto3" json:"longtitude,omitempty"`
+	Longitude     float64                `protobuf:"fixed64,2,opt,name=longitude,proto3" json:"longitude,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -186,16 +186,16 @@ func (x *Coordinate) GetLatitude() float64 {
 	return 0
 }
 
-func (x *Coordinate) GetLongtitude() float64 {
+func (x *Coordinate) GetLongitude() float64 {
 	if x != nil {
-		return x.Longtitude
+		return x.Longitude
 	}
 	return 0
 }
 
 type Route struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Geometry      []*Geometry            `protobuf:"bytes,1,rep,name=geometry,proto3" json:"geometry,omitempty"`
+	Geometry      *Geometry              `protobuf:"bytes,1,opt,name=geometry,proto3" json:"geometry,omitempty"`
 	Distance      float64                `protobuf:"fixed64,2,opt,name=distance,proto3" json:"distance,omitempty"`
 	Duration      float64                `protobuf:"fixed64,3,opt,name=duration,proto3" json:"duration,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -232,7 +232,7 @@ func (*Route) Descriptor() ([]byte, []int) {
 	return file_trip_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Route) GetGeometry() []*Geometry {
+func (x *Route) GetGeometry() *Geometry {
 	if x != nil {
 		return x.Geometry
 	}
@@ -377,16 +377,14 @@ const file_trip_proto_rawDesc = "" +
 	"\vendLocation\x18\x03 \x01(\v2\x10.trip.CoordinateR\vendLocation\"~\n" +
 	"\x13PreviewTripResponse\x12\x16\n" +
 	"\x06tripID\x18\x01 \x01(\tR\x06tripID\x12!\n" +
-	"\x05route\x18\x02 \x01(\v2\v.trip.RouteR\x05route\x12,\n" +
-	"\trideFares\x18\x03 \x03(\v2\x0e.trip.RideFareR\trideFares\"H\n" +
+	"\x05route\x18\x02 \x03(\v2\v.trip.RouteR\x05route\x12,\n" +
+	"\trideFares\x18\x03 \x03(\v2\x0e.trip.RideFareR\trideFares\"F\n" +
 	"\n" +
 	"Coordinate\x12\x1a\n" +
-	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1e\n" +
-	"\n" +
-	"longtitude\x18\x02 \x01(\x01R\n" +
-	"longtitude\"k\n" +
+	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\"k\n" +
 	"\x05Route\x12*\n" +
-	"\bgeometry\x18\x01 \x03(\v2\x0e.trip.GeometryR\bgeometry\x12\x1a\n" +
+	"\bgeometry\x18\x01 \x01(\v2\x0e.trip.GeometryR\bgeometry\x12\x1a\n" +
 	"\bdistance\x18\x02 \x01(\x01R\bdistance\x12\x1a\n" +
 	"\bduration\x18\x03 \x01(\x01R\bduration\"\x80\x01\n" +
 	"\bRideFare\x12\x0e\n" +

@@ -1,6 +1,6 @@
 syntax = "proto3";
 package trip;
-option go_package = 'shared/proto/trip';
+option go_package = "shared/proto/trip";
 
 
 service TripService {
@@ -15,22 +15,21 @@ message PreviewTripRequest{
 
 message PreviewTripResponse {
     string tripID = 1;
-    Route route = 2;
+  repeated  Route route = 2;
   repeated  RideFare  rideFares = 3;
 }
 
 
 message Coordinate{
     double latitude = 1;
-    double longtitude = 2;
+    double longitude = 2;
 }
 
 
 message Route {
-  repeated  Geometry  geometry = 1;
-    double distance = 2;
-    double duration = 3;
-
+   Geometry  geometry = 1;
+   double distance = 2;
+   double duration = 3;
 }
 
 message RideFare{

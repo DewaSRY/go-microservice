@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	grpcclient "ride-sharing/services/api-gateway/grpc_client"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/util"
+
+	"ride-sharing/shared/proto/driver"
 
 	"github.com/gorilla/websocket"
 )
@@ -88,6 +91,32 @@ func handleDriverWebScoket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer conn.Close()
+	ctx := r.Context()
+
+	driverService, err := grpcclient.NewDriverServiceClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer func() {
+		driverService.Client.UnRegisterDriver(ctx, &driver.RegisterDriverRequest{
+			DriverId:    userId,
+			PackageSlug: packageSlug,
+		})
+		driverService.Close()
+		log.Println("Driver unregistered: ", userId)
+	}()
+
+	driverData, err := driverService.Client.RegisterDriver(ctx, &driver.RegisterDriverRequest{
+		DriverId:    userId,
+		PackageSlug: packageSlug,
+	})
+	if err != nil {
+		log.Printf("Error registering driver: %v", err)
+		return
+	}
+
+	fmt.Print(driverData)
 
 	for {
 		_, message, err := conn.ReadMessage()

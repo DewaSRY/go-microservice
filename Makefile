@@ -18,3 +18,11 @@ run-trip-service:
 
 run-test: 
 	go test -v ./...
+
+# build commend
+build-driver-service:
+	go build -o build/driver-service ./services/driver-service/cmd/main.go
+build-trip-service:
+	go build -o build/trip-service ./services/trip-service/cmd/main.go
+build-getway:
+	go build -o build/api-gateway ./services/api-gateway

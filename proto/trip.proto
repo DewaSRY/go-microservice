@@ -15,7 +15,7 @@ message PreviewTripRequest{
 }
 
 message PreviewTripResponse {
-    string tripID = 1;
+  string tripID = 1;
   repeated  Route route = 2;
   repeated  RideFare  rideFares = 3;
 }

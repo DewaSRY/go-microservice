@@ -22,5 +22,6 @@ require (
 
 require (
 	dario.cat/mergo v1.0.2
+	github.com/mmcloughlin/geohash v0.10.0
 	go.mongodb.org/mongo-driver v1.13.1
 )

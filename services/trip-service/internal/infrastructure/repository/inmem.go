@@ -56,3 +56,15 @@ func (r *InMemoryRepository) SaveRideFare(ctx context.Context, fare *domain.Ride
 	r.rideFares[fare.Id.Hex()] = fare
 	return nil
 }
+
+func (r *InMemoryRepository) GetFareById(ctx context.Context, fareId string) (*domain.RideFareModel, error) {
+
+	fare, exists := r.rideFares[fareId]
+
+	if !exists {
+		return nil, fmt.Errorf("fare_not_fount")
+	}
+
+	return fare, nil
+
+}

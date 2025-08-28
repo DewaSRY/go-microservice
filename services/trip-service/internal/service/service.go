@@ -10,6 +10,8 @@ import (
 	"ride-sharing/shared/types"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	pb "ride-sharing/shared/proto/trip"
 )
 
 type Service struct {
@@ -28,6 +30,7 @@ func (s Service) CreateTrip(ctx context.Context, fare *domain.RideFareModel) (*d
 		UserId:   fare.UserId,
 		Status:   "pending",
 		RideFare: *fare,
+		Driver:   &pb.TripDriver{},
 	}
 	return s.repo.CreateTrip(ctx, t)
 }
@@ -126,4 +129,9 @@ func getBaseFares() []*domain.RideFareModel {
 			TotalPriceInCents: 1000.0,
 		},
 	}
+}
+
+func (r *Service) GetFareById(ctx context.Context, fareId string) (*domain.RideFareModel, error) {
+
+	return r.repo.GetFareById(ctx, fareId)
 }

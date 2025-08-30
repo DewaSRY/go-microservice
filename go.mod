@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	go.opentelemetry.io/otel v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
 )

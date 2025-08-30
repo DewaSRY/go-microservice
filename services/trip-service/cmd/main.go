@@ -8,16 +8,20 @@ import (
 	"os/signal"
 	grpcHandler "ride-sharing/services/trip-service/internal/infrastructure/grpc"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
+	"ride-sharing/shared/env"
 
 	"ride-sharing/services/trip-service/internal/service"
 	"syscall"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	grpcServer "google.golang.org/grpc"
 )
 
 const GrpcAddr = ":9093"
 
 func main() {
+	rabbitmqUri := env.GetString("RABBITMQ_URI", "amqp://guess:guess@rabbitmq:5672/")
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	log.Println("Starting API Gateway")
@@ -40,6 +44,12 @@ func main() {
 		log.Fatalf("failed_to_listen : %v", err)
 	}
 
+	conn, err := amqp.Dial(rabbitmqUri)
+	if err != nil {
+		log.Fatal("failed_to_connect_to_rabbitmq: ")
+	}
+	defer conn.Close()
+
 	grpcServer := grpcServer.NewServer()
 	grpcHandler.NewGRPCHandler(grpcServer, service)
 
@@ -53,4 +63,10 @@ func main() {
 	}()
 
 	<-ctx.Done()
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Panicf("%s: %s", msg, err)
+	}
 }

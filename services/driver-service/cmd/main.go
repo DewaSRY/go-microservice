@@ -10,13 +10,16 @@ import (
 
 	"ride-sharing/services/driver-service/internal/infrastructure/grpc"
 	"ride-sharing/services/driver-service/internal/service"
+	"ride-sharing/shared/env"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	grpcServer "google.golang.org/grpc"
 )
 
 const GrpcAddr = ":9092"
 
 func main() {
+	rabbitmqUri := env.GetString("RABBITMQ_URI", "amqp://guess:guess@rabbitmq:5672/")
 	ctx, cancel := context.WithCancel(context.Background())
 	driverService := service.NewService()
 	log.Println("Starting API Gateway")
@@ -33,6 +36,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed_to_listen : %v", err)
 	}
+
+	conn, err := amqp.Dial(rabbitmqUri)
+	if err != nil {
+		log.Fatal("failed_to_connect_to_rabbitmq: ")
+	}
+	defer conn.Close()
 
 	//Create Grpc service
 	grpcServer := grpcServer.NewServer()

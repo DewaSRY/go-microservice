@@ -6,14 +6,15 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"ride-sharing/services/trip-service/internal/events"
 	grpcHandler "ride-sharing/services/trip-service/internal/infrastructure/grpc"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	"ride-sharing/shared/env"
+	"ride-sharing/shared/messaging"
 
 	"ride-sharing/services/trip-service/internal/service"
 	"syscall"
 
-	amqp "github.com/rabbitmq/amqp091-go"
 	grpcServer "google.golang.org/grpc"
 )
 
@@ -44,14 +45,16 @@ func main() {
 		log.Fatalf("failed_to_listen : %v", err)
 	}
 
-	conn, err := amqp.Dial(rabbitmqUri)
+	rabbitmq, err := messaging.NewRabbitMQ(rabbitmqUri)
 	if err != nil {
 		log.Fatal("failed_to_connect_to_rabbitmq: ")
 	}
-	defer conn.Close()
+	defer rabbitmq.Close()
+
+	publisher := events.NewTripEventPublisher(rabbitmq)
 
 	grpcServer := grpcServer.NewServer()
-	grpcHandler.NewGRPCHandler(grpcServer, service)
+	grpcHandler.NewGRPCHandler(grpcServer, service, publisher)
 
 	log.Printf("Starting gRPC server Trip service on port %s", lis.Addr().String())
 
@@ -63,10 +66,4 @@ func main() {
 	}()
 
 	<-ctx.Done()
-}
-
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
-	}
 }

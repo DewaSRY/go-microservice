@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"ride-sharing/services/trip-service/internal/domain"
+	"ride-sharing/services/trip-service/internal/events"
 	pb "ride-sharing/shared/proto/trip"
 
 	"ride-sharing/shared/mapper"
@@ -15,13 +16,20 @@ import (
 
 type GRPCHandler struct {
 	pb.UnimplementedTripServiceServer
-	service domain.TripService
+	service   domain.TripService
+	publisher *events.TripEventPublisher
 }
 
-func NewGRPCHandler(server *grpc.Server, service domain.TripService) *GRPCHandler {
+func NewGRPCHandler(
+	server *grpc.Server,
+	service domain.TripService,
+	publisher *events.TripEventPublisher) *GRPCHandler {
+
 	handler := &GRPCHandler{
-		service: service,
+		service:   service,
+		publisher: publisher,
 	}
+
 	pb.RegisterTripServiceServer(server, handler)
 	return handler
 }
@@ -83,6 +91,10 @@ func (h *GRPCHandler) CreateTrip(ctx context.Context, req *pb.CreateTripRequest)
 	}
 	// 3. We also need to initialize an empty drver to the trip.
 	// 4. Add a comment at the end of the function to publish an event on the Asnyc Comms module.
+	if err := h.publisher.PublishTripCreated(ctx); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed_to_publsh_the_trip_created_event: %v", err)
+	}
+
 	return &pb.CreateTripResponse{
 		TripID: trip.Id.Hex(),
 	}, nil

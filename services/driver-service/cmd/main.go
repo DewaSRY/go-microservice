@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"ride-sharing/services/driver-service/internal/events"
 	"ride-sharing/services/driver-service/internal/infrastructure/grpc"
 	"ride-sharing/services/driver-service/internal/service"
 	"ride-sharing/shared/env"
@@ -42,6 +44,16 @@ func main() {
 		log.Fatal("failed_to_connect_to_rabbitmq: ")
 	}
 	defer rabbit.Close()
+
+	tripConnnsummer := events.NewTripConsummer(rabbit)
+
+	go func() {
+		fmt.Print("statt to listen")
+
+		if err := tripConnnsummer.Listen(); err != nil {
+			log.Fatalf("failed_to_connsume_the_queue :%v", err)
+		}
+	}()
 
 	//Create Grpc service
 	grpcServer := grpcServer.NewServer()

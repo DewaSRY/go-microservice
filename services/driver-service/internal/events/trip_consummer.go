@@ -19,8 +19,7 @@ func NewTripConsummer(rabbitmq *messaging.RabbitMQ) *TripEventConnsummer {
 }
 
 func (t *TripEventConnsummer) Listen() error {
-	return t.rabbitmq.ConsummeMessages("hallo", func(ctx context.Context, msg amqp091.Delivery) error {
-
+	return t.rabbitmq.ConsummeMessages(messaging.FindAvailableDriversQueue, func(ctx context.Context, msg amqp091.Delivery) error {
 		log.Printf("deliver received message : %v", msg)
 		return nil
 	})

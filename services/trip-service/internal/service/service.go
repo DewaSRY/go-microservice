@@ -10,8 +10,6 @@ import (
 	"ride-sharing/shared/types"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	pb "ride-sharing/shared/proto/trip"
 )
 
 type Service struct {
@@ -24,13 +22,13 @@ func NewService(repo domain.TripRepository) *Service {
 	}
 }
 
-func (s Service) CreateTrip(ctx context.Context, fare *domain.RideFareModel) (*domain.TripModel, error) {
-	t := &domain.TripModel{
+func (s Service) CreateTrip(ctx context.Context, fare *types.RideFareModel) (*types.TripModel, error) {
+	t := &types.TripModel{
 		Id:       primitive.NewObjectID(),
 		UserId:   fare.UserId,
 		Status:   "pending",
 		RideFare: *fare,
-		Driver:   &pb.TripDriver{},
+		Driver:   &types.TripDriver{},
 	}
 	return s.repo.CreateTrip(ctx, t)
 }
@@ -62,10 +60,10 @@ func (s Service) GetRoute(ctx context.Context, pickup, destination *types.Coordi
 
 }
 
-func (s *Service) EstimatePackagesPriceWithRoute(route *types.OsrmApiResponse) []*domain.RideFareModel {
+func (s *Service) EstimatePackagesPriceWithRoute(route *types.OsrmApiResponse) []*types.RideFareModel {
 	baseFares := getBaseFares()
 
-	fareList := make([]*domain.RideFareModel, len(baseFares))
+	fareList := make([]*types.RideFareModel, len(baseFares))
 
 	for i, f := range baseFares {
 		fareList[i] = estimationFareRoute(f, route)
@@ -74,26 +72,29 @@ func (s *Service) EstimatePackagesPriceWithRoute(route *types.OsrmApiResponse) [
 	return baseFares
 }
 
-func (s *Service) GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userId string) ([]*domain.RideFareModel, error) {
-	faresList := make([]*domain.RideFareModel, len(fares))
+func (s *Service) GenerateTripFares(ctx context.Context, fares []*types.RideFareModel, userId string, route *types.OsrmApiResponse) ([]*types.RideFareModel, error) {
+	faresList := make([]*types.RideFareModel, len(fares))
 
 	for i, f := range fares {
 		Id := primitive.NewObjectID()
-		fare := &domain.RideFareModel{
+		fare := &types.RideFareModel{
 			UserId:            userId,
 			Id:                Id,
 			TotalPriceInCents: f.TotalPriceInCents,
 			PackageSlug:       f.PackageSlug,
+			Route:             route.Routes[0],
 		}
+
 		if err := s.repo.SaveRideFare(ctx, fare); err != nil {
 			return nil, fmt.Errorf("failed_to_save_trip_fare :%v", err)
 		}
+
 		faresList[i] = fare
 	}
 	return faresList, nil
 }
 
-func estimationFareRoute(f *domain.RideFareModel, route *types.OsrmApiResponse) *domain.RideFareModel {
+func estimationFareRoute(f *types.RideFareModel, route *types.OsrmApiResponse) *types.RideFareModel {
 	pricingCfg := types.DefaultPricingConfig()
 	carPackagePrice := f.TotalPriceInCents
 
@@ -104,14 +105,14 @@ func estimationFareRoute(f *domain.RideFareModel, route *types.OsrmApiResponse) 
 	timeFare := durationInMinutes * pricingCfg.PricingPerMinute
 	totalPrice := carPackagePrice + distanceFare + timeFare
 
-	return &domain.RideFareModel{
+	return &types.RideFareModel{
 		TotalPriceInCents: totalPrice,
 		PackageSlug:       f.PackageSlug,
 	}
 }
 
-func getBaseFares() []*domain.RideFareModel {
-	return []*domain.RideFareModel{
+func getBaseFares() []*types.RideFareModel {
+	return []*types.RideFareModel{
 		{
 			PackageSlug:       "suv",
 			TotalPriceInCents: 200.0,
@@ -131,7 +132,7 @@ func getBaseFares() []*domain.RideFareModel {
 	}
 }
 
-func (r *Service) GetFareById(ctx context.Context, fareId string) (*domain.RideFareModel, error) {
+func (r *Service) GetFareById(ctx context.Context, fareId string) (*types.RideFareModel, error) {
 
 	return r.repo.GetFareById(ctx, fareId)
 }

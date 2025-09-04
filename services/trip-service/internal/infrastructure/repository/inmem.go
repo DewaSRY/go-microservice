@@ -6,23 +6,22 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/shared/types"
 )
 
 type InMemoryRepository struct {
-	trip      map[string]*domain.TripModel
-	rideFares map[string]*domain.RideFareModel
+	trip      map[string]*types.TripModel
+	rideFares map[string]*types.RideFareModel
 }
 
 func NewInMemoryRepository() *InMemoryRepository {
 	return &InMemoryRepository{
-		trip:      make(map[string]*domain.TripModel),
-		rideFares: make(map[string]*domain.RideFareModel),
+		trip:      make(map[string]*types.TripModel),
+		rideFares: make(map[string]*types.RideFareModel),
 	}
 }
 
-func (r *InMemoryRepository) CreateTrip(ctx context.Context, trip *domain.TripModel) (*domain.TripModel, error) {
+func (r *InMemoryRepository) CreateTrip(ctx context.Context, trip *types.TripModel) (*types.TripModel, error) {
 	r.trip[trip.Id.Hex()] = trip
 	return trip, nil
 }
@@ -52,12 +51,12 @@ func (s *InMemoryRepository) GetRoute(ctx context.Context, pickup, destination *
 
 }
 
-func (r *InMemoryRepository) SaveRideFare(ctx context.Context, fare *domain.RideFareModel) error {
+func (r *InMemoryRepository) SaveRideFare(ctx context.Context, fare *types.RideFareModel) error {
 	r.rideFares[fare.Id.Hex()] = fare
 	return nil
 }
 
-func (r *InMemoryRepository) GetFareById(ctx context.Context, fareId string) (*domain.RideFareModel, error) {
+func (r *InMemoryRepository) GetFareById(ctx context.Context, fareId string) (*types.RideFareModel, error) {
 
 	fare, exists := r.rideFares[fareId]
 

@@ -47,15 +47,9 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 
 	userId := req.GetUserID()
 
-	routes := make([]*pb.Route, len(trip_route.Routes))
-
-	for i, r := range trip_route.Routes {
-		routes[i] = mapper.MappedRouteToProtoroute(&r)
-	}
-
 	estimatedFares := h.service.EstimatePackagesPriceWithRoute(trip_route)
 
-	fares, err := h.service.GenerateTripFares(ctx, estimatedFares, userId)
+	fares, err := h.service.GenerateTripFares(ctx, estimatedFares, userId, trip_route)
 
 	if err != nil {
 		log.Println(err)
@@ -64,11 +58,11 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 
 	rideFare := make([]*pb.RideFare, len(fares))
 	for i, f := range fares {
-		rideFare[i] = mappedRideFareToProtoRideFare(f)
+		rideFare[i] = mapper.MappedRideFareToProtoRideFare(f)
 	}
 
 	return &pb.PreviewTripResponse{
-		Route:     routes,
+		Route:     mapper.MappedRouteToProtoroute(&trip_route.Routes[0]),
 		RideFares: rideFare,
 	}, nil
 }
@@ -91,20 +85,11 @@ func (h *GRPCHandler) CreateTrip(ctx context.Context, req *pb.CreateTripRequest)
 	}
 	// 3. We also need to initialize an empty drver to the trip.
 	// 4. Add a comment at the end of the function to publish an event on the Asnyc Comms module.
-	if err := h.publisher.PublishTripCreated(ctx); err != nil {
+	if err := h.publisher.PublishTripCreated(ctx, *trip); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed_to_publsh_the_trip_created_event: %v", err)
 	}
 
 	return &pb.CreateTripResponse{
 		TripID: trip.Id.Hex(),
 	}, nil
-}
-
-func mappedRideFareToProtoRideFare(fare *domain.RideFareModel) *pb.RideFare {
-	return &pb.RideFare{
-		Id:               fare.Id.Hex(),
-		UserID:           fare.UserId,
-		PackageSlug:      fare.PackageSlug,
-		TotalPriceInCets: fare.TotalPriceInCents,
-	}
 }

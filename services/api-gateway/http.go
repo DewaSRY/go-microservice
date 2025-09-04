@@ -9,7 +9,6 @@ import (
 )
 
 func handleTripPreview(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
 	defer r.Body.Close()
 
 	var reqBody PreviewTripRequest
@@ -41,7 +40,6 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleTripSatart(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
 	defer r.Body.Close()
 
 	var reqBody startTripRequest

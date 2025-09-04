@@ -85,7 +85,7 @@ interface DriverResponseToTripResponse {
 }
 
 export interface HTTPTripPreviewResponse {
-  route: Route[];
+  route: Route;
   rideFares: RouteFare[];
 }
 

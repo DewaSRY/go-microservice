@@ -2,8 +2,10 @@ package messaging
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"ride-sharing/shared/contracts"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -12,6 +14,10 @@ type RabbitMQ struct {
 	conn    *amqp.Connection
 	Channel *amqp.Channel
 }
+
+const (
+	TripExchange = "trip"
+)
 
 type MessageHandler func(context.Context, amqp.Delivery) error
 
@@ -33,7 +39,7 @@ func NewRabbitMQ(urlString string) (*RabbitMQ, error) {
 		Channel: ch,
 	}
 
-	if err := rmq.setupExchngesAndQueues(); err != nil {
+	if err := rmq.setupExchangesAndQueues(); err != nil {
 		rmq.Close()
 		return nil, fmt.Errorf("failed_to_setup_and_exchange_queue")
 	}
@@ -41,24 +47,39 @@ func NewRabbitMQ(urlString string) (*RabbitMQ, error) {
 	return rmq, nil
 }
 
-func (r *RabbitMQ) setupExchngesAndQueues() error {
-	_, err := r.Channel.QueueDeclare(
-		"hallo", //name
-		true,    //durable
-		false,   //delete when unused
-		false,   //exclusive
-		false,   //no-wait
-		nil,     // argument
+func (r *RabbitMQ) setupExchangesAndQueues() error {
+	err := r.Channel.ExchangeDeclare(
+		TripExchange, // name
+		"topic",      // type
+		true,         // durable
+		false,        // auto-deleted
+		false,        // internal
+		false,        // no-wait
+		nil,          // arguments
 	)
-
 	if err != nil {
-		return fmt.Errorf("failed_to_declare_queue")
+		return fmt.Errorf("failed to declare exchange: %s: %v", TripExchange, err)
+	}
+
+	if err := r.declareAndBindQueue(
+		FindAvailableDriversQueue,
+		[]string{
+			contracts.TripEventCreated, contracts.TripEventDriverNotInterested,
+		},
+		TripExchange,
+	); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (r *RabbitMQ) PublishingMessage(ctx context.Context, routingKey string, message string) error {
+func (r *RabbitMQ) PublishingMessage(ctx context.Context, routingKey string, message contracts.AmqpMessage) error {
+
+	jsonMsg, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("failed to marshal message: %v", err)
+	}
 	return r.Channel.PublishWithContext(
 		ctx,
 		"",
@@ -67,7 +88,7 @@ func (r *RabbitMQ) PublishingMessage(ctx context.Context, routingKey string, mes
 		false,
 		amqp.Publishing{
 			ContentType: "text/plane",
-			Body:        []byte(message),
+			Body:        jsonMsg,
 		})
 }
 
@@ -86,13 +107,13 @@ func (r *RabbitMQ) ConsummeMessages(queueName string, handler MessageHandler) er
 	}
 
 	msgs, err := r.Channel.Consume(
-		"hallo", // quue
-		"",      // consummer
-		false,   //auto-ack
-		false,   //exclusive
-		false,   //no-local
-		false,   //no-await
-		nil,     //args
+		TripExchange, // quue
+		"",           // consummer
+		false,        //auto-ack
+		false,        //exclusive
+		false,        //no-local
+		false,        //no-await
+		nil,          //args
 	)
 
 	if err != nil {
@@ -120,6 +141,34 @@ func (r *RabbitMQ) ConsummeMessages(queueName string, handler MessageHandler) er
 			}
 		}
 	}()
+
+	return nil
+}
+
+func (r *RabbitMQ) declareAndBindQueue(queueName string, messageTypes []string, exchange string) error {
+	q, err := r.Channel.QueueDeclare(
+		queueName, // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, msg := range messageTypes {
+		if err := r.Channel.QueueBind(
+			q.Name,   // queue name
+			msg,      // routing key
+			exchange, // exchange
+			false,
+			nil,
+		); err != nil {
+			return fmt.Errorf("failed to bind queue to %s: %v", queueName, err)
+		}
+	}
 
 	return nil
 }

@@ -12,9 +12,13 @@ generate-proto:
 		$(PROTO_SRC)
 
 
+run-driver-service:
+	go run ./services/driver-service/cmd/main.go
+
 # Run trip-service directly
 run-trip-service:
 	go run ./services/trip-service/cmd/main.go
+
 
 run-test: 
 	go test -v ./...

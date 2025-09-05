@@ -80,19 +80,21 @@ func (r *RabbitMQ) PublishingMessage(ctx context.Context, routingKey string, mes
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %v", err)
 	}
+
 	return r.Channel.PublishWithContext(
 		ctx,
-		"",
+		TripExchange,
 		routingKey,
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plane",
-			Body:        jsonMsg,
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "application/json",
+			Body:         jsonMsg,
 		})
 }
 
-func (r *RabbitMQ) ConsummeMessages(queueName string, handler MessageHandler) error {
+func (r *RabbitMQ) ConsumeMessages(queueName string, handler MessageHandler) error {
 
 	// Set prefetch count to 1 for fair dispatch
 	// This tells RabbitMQ not to give more than one message to a service at a time.
@@ -107,30 +109,30 @@ func (r *RabbitMQ) ConsummeMessages(queueName string, handler MessageHandler) er
 	}
 
 	msgs, err := r.Channel.Consume(
-		TripExchange, // quue
-		"",           // consummer
-		false,        //auto-ack
-		false,        //exclusive
-		false,        //no-local
-		false,        //no-await
-		nil,          //args
+		queueName, // queue
+		"",        // consumer
+		false,     //auto-ack
+		false,     //exclusive
+		false,     //no-local
+		false,     //no-await
+		nil,       //args
 	)
 
 	if err != nil {
+		log.Fatalf("failed_to_create_consumer:%v", err)
 		return err
 	}
+
 	ctx := context.Background()
 
 	go func() {
 		for msg := range msgs {
-			log.Printf("receive_message :%s", msg.Body)
-
 			if err := handler(ctx, msg); err != nil {
 				log.Printf("error_failed_to_handle_message:%v", err)
 				//Neck the message. set requeue to false to avoid immediate redelivery loops.
 				//consider a dead-letter exchange (DLQ) or a more sophisticated retry mechanism for production
 				if neckErr := msg.Nack(false, false); neckErr != nil {
-					log.Printf("error_failed_tonack_message:%v", neckErr)
+					log.Printf("error_failed_to_nack_message:%v", neckErr)
 				}
 				continue
 			}

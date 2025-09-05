@@ -8,19 +8,19 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
-type TripEventConnsummer struct {
+type TripEventConsumer struct {
 	rabbitmq *messaging.RabbitMQ
 }
 
-func NewTripConsummer(rabbitmq *messaging.RabbitMQ) *TripEventConnsummer {
-	return &TripEventConnsummer{
+func NewTripConsumer(rabbitmq *messaging.RabbitMQ) *TripEventConsumer {
+	return &TripEventConsumer{
 		rabbitmq: rabbitmq,
 	}
 }
 
-func (t *TripEventConnsummer) Listen() error {
-	return t.rabbitmq.ConsummeMessages(messaging.FindAvailableDriversQueue, func(ctx context.Context, msg amqp091.Delivery) error {
-		log.Printf("deliver received message : %v", msg)
+func (t *TripEventConsumer) Listen() error {
+	return t.rabbitmq.ConsumeMessages(messaging.FindAvailableDriversQueue, func(ctx context.Context, msg amqp091.Delivery) error {
+		log.Printf("deliver_received_message : %v", msg)
 		return nil
 	})
 }

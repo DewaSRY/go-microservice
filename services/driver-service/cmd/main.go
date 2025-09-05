@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -45,12 +44,10 @@ func main() {
 	}
 	defer rabbit.Close()
 
-	tripConnnsummer := events.NewTripConsummer(rabbit)
+	tripConsumer := events.NewTripConsumer(rabbit)
 
 	go func() {
-		fmt.Print("statt to listen")
-
-		if err := tripConnnsummer.Listen(); err != nil {
+		if err := tripConsumer.Listen(); err != nil {
 			log.Fatalf("failed_to_connsume_the_queue :%v", err)
 		}
 	}()

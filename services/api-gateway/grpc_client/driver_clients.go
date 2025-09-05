@@ -17,7 +17,7 @@ type DriverServiceClient struct {
 func NewDriverServiceClient() (*DriverServiceClient, error) {
 	driverServiceURL := os.Getenv("DRIVER_SERVICE_URL")
 	if driverServiceURL == "" {
-		driverServiceURL = "trip-service:9092"
+		driverServiceURL = "driver-service:9092"
 	}
 
 	// dialOptions := append(

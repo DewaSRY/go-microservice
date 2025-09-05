@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"log"
 	"ride-sharing/services/driver-service/internal/service"
 	pb "ride-sharing/shared/proto/driver"
 
@@ -24,6 +25,8 @@ func NewGrpcHandler(s *grpc.Server, service *service.Service) {
 }
 
 func (h *GrpcHandler) RegisterDriver(ctx context.Context, req *pb.RegisterDriverRequest) (*pb.RegisterDriverResponse, error) {
+	log.Printf("register_driver: %v", req)
+
 	driver, err := h.Service.RegisterDriver(req.GetDriverId(), req.GetPackageSlug())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to register driver")
@@ -35,6 +38,7 @@ func (h *GrpcHandler) RegisterDriver(ctx context.Context, req *pb.RegisterDriver
 }
 
 func (h *GrpcHandler) UnRegisterDriver(ctx context.Context, req *pb.RegisterDriverRequest) (*pb.RegisterDriverResponse, error) {
+	log.Printf("unregister_driver: %v", req)
 	h.Service.UnregisterDriver(req.GetDriverId())
 
 	return &pb.RegisterDriverResponse{

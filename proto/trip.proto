@@ -20,12 +20,10 @@ message PreviewTripResponse {
   repeated  RideFare  rideFares = 3;
 }
 
-
 message Coordinate{
     double latitude = 1;
     double longitude = 2;
 }
-
 
 message Route {
    Geometry  geometry = 1;

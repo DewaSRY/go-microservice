@@ -31,7 +31,7 @@ func HandlerRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("connect ")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("WebSocket upgrade failed :%v", err)
+		log.Printf("websocket_upgrade_failed :%v", err)
 		return
 	}
 
@@ -105,7 +105,7 @@ func HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 			PackageSlug: packageSlug,
 		})
 		driverService.Close()
-		log.Println("Driver unregistered: ", userId)
+		log.Println("driver_unregister: ", userId)
 	}()
 
 	driverData, err := driverService.Client.RegisterDriver(ctx, &driver.RegisterDriverRequest{
@@ -113,7 +113,7 @@ func HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 		PackageSlug: packageSlug,
 	})
 	if err != nil {
-		log.Printf("Error registering driver: %v", err)
+		log.Printf("error_register_driver: %v", err)
 		return
 	}
 

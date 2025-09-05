@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	internalHttp "ride-sharing/services/api-gateway/internal/infrastructure/http"
+	"ride-sharing/services/api-gateway/internal/infrastructure/ws"
 	"ride-sharing/shared/env"
 )
 
@@ -21,11 +23,11 @@ func main() {
 		w.Write([]byte("Hello from API Gateway"))
 	})
 
-	mux.HandleFunc("POST /trip/preview", enableCORS(handleTripPreview))
-	mux.HandleFunc("POST /trip/start", enableCORS(handleTripSatart))
+	mux.HandleFunc("POST /trip/preview", enableCORS(internalHttp.HandleTripPreview))
+	mux.HandleFunc("POST /trip/start", enableCORS(internalHttp.HandleTripStart))
 
-	mux.HandleFunc("/ws/riders", handlerRidersWebSocket)
-	mux.HandleFunc("/ws/drivers", handleDriverWebScoket)
+	mux.HandleFunc("/ws/riders", ws.HandlerRidersWebSocket)
+	mux.HandleFunc("/ws/drivers", ws.HandleDriverWebSocket)
 
 	server := &http.Server{
 		Addr:    httpAddr,

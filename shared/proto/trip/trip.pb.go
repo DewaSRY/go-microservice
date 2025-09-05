@@ -7,11 +7,12 @@
 package trip
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -254,13 +255,13 @@ func (x *Route) GetDuration() float64 {
 }
 
 type RideFare struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserID           string                 `protobuf:"bytes,2,opt,name=userID,proto3" json:"userID,omitempty"`
-	PackageSlug      string                 `protobuf:"bytes,3,opt,name=packageSlug,proto3" json:"packageSlug,omitempty"`
-	TotalPriceInCets float64                `protobuf:"fixed64,4,opt,name=totalPriceInCets,proto3" json:"totalPriceInCets,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserID            string                 `protobuf:"bytes,2,opt,name=userID,proto3" json:"userID,omitempty"`
+	PackageSlug       string                 `protobuf:"bytes,3,opt,name=packageSlug,proto3" json:"packageSlug,omitempty"`
+	TotalPriceInCents float64                `protobuf:"fixed64,4,opt,name=totalPriceInCents,proto3" json:"totalPriceInCents,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *RideFare) Reset() {
@@ -314,9 +315,9 @@ func (x *RideFare) GetPackageSlug() string {
 	return ""
 }
 
-func (x *RideFare) GetTotalPriceInCets() float64 {
+func (x *RideFare) GetTotalPriceInCents() float64 {
 	if x != nil {
-		return x.TotalPriceInCets
+		return x.TotalPriceInCents
 	}
 	return 0
 }
@@ -643,12 +644,12 @@ const file_trip_proto_rawDesc = "" +
 	"\x05Route\x12*\n" +
 	"\bgeometry\x18\x01 \x01(\v2\x0e.trip.GeometryR\bgeometry\x12\x1a\n" +
 	"\bdistance\x18\x02 \x01(\x01R\bdistance\x12\x1a\n" +
-	"\bduration\x18\x03 \x01(\x01R\bduration\"\x80\x01\n" +
+	"\bduration\x18\x03 \x01(\x01R\bduration\"\x82\x01\n" +
 	"\bRideFare\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06userID\x18\x02 \x01(\tR\x06userID\x12 \n" +
-	"\vpackageSlug\x18\x03 \x01(\tR\vpackageSlug\x12*\n" +
-	"\x10totalPriceInCets\x18\x04 \x01(\x01R\x10totalPriceInCets\">\n" +
+	"\vpackageSlug\x18\x03 \x01(\tR\vpackageSlug\x12,\n" +
+	"\x11totalPriceInCents\x18\x04 \x01(\x01R\x11totalPriceInCents\">\n" +
 	"\bGeometry\x122\n" +
 	"\vcoordinates\x18\x01 \x03(\v2\x10.trip.CoordinateR\vcoordinates\"K\n" +
 	"\x11CreateTripRequest\x12\x1e\n" +

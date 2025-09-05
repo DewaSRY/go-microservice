@@ -3,10 +3,9 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"ride-sharing/services/trip-service/pkg/types"
 	"ride-sharing/shared/contracts"
-	"ride-sharing/shared/mapper"
 	"ride-sharing/shared/messaging"
-	"ride-sharing/shared/types"
 )
 
 type TripEventPublisher struct {
@@ -19,7 +18,7 @@ func NewTripEventPublisher(rabbitmq *messaging.RabbitMQ) *TripEventPublisher {
 
 func (t *TripEventPublisher) PublishTripCreated(ctx context.Context, trip types.TripModel) error {
 	payload := messaging.TripEventData{
-		Trip: mapper.MappedTripModelToProtoTripModel(&trip),
+		Trip: trip.ToTripProtoTrip(),
 	}
 
 	tripEventJSON, err := json.Marshal(payload)

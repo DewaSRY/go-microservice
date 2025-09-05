@@ -7,7 +7,8 @@ import (
 	"io"
 	"net/http"
 	"ride-sharing/services/trip-service/internal/domain"
-	"ride-sharing/shared/types"
+
+	"ride-sharing/services/trip-service/pkg/types"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -61,7 +62,7 @@ func (s Service) GetRoute(ctx context.Context, pickup, destination *types.Coordi
 }
 
 func (s *Service) EstimatePackagesPriceWithRoute(route *types.OsrmApiResponse) []*types.RideFareModel {
-	baseFares := getBaseFares()
+	baseFares := types.GetBaseFares()
 
 	fareList := make([]*types.RideFareModel, len(baseFares))
 
@@ -108,27 +109,6 @@ func estimationFareRoute(f *types.RideFareModel, route *types.OsrmApiResponse) *
 	return &types.RideFareModel{
 		TotalPriceInCents: totalPrice,
 		PackageSlug:       f.PackageSlug,
-	}
-}
-
-func getBaseFares() []*types.RideFareModel {
-	return []*types.RideFareModel{
-		{
-			PackageSlug:       "suv",
-			TotalPriceInCents: 200.0,
-		},
-		{
-			PackageSlug:       "sedan",
-			TotalPriceInCents: 350.0,
-		},
-		{
-			PackageSlug:       "van",
-			TotalPriceInCents: 400.0,
-		},
-		{
-			PackageSlug:       "luxury",
-			TotalPriceInCents: 1000.0,
-		},
 	}
 }
 

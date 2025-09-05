@@ -2,7 +2,7 @@ package domain
 
 import (
 	"context"
-	"ride-sharing/shared/types"
+	"ride-sharing/services/trip-service/pkg/types"
 )
 
 type TripRepository interface {

@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -60,6 +61,19 @@ func (t *WsHandler) HandlerRidersWebSocket(w http.ResponseWriter, r *http.Reques
 	// Add connection to manager
 	connManager.Add(userId, conn)
 	defer connManager.Remove(userId)
+
+	// Initialize queue consumers
+	queues := []string{
+		messaging.NotifyDriverNoDriversFoundQueue,
+	}
+
+	for _, q := range queues {
+		consumer := messaging.NewQueueConsumer(t.rabbitMq, connManager, q)
+
+		if err := consumer.Start(); err != nil {
+			log.Printf("Failed to start consumer for queue: %s: err: %v", q, err)
+		}
+	}
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -139,13 +153,10 @@ func (t *WsHandler) HandleDriverWebSocket(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	fmt.Print(driverData)
-
 	if err := connManager.SendMessage(userId, contracts.WSMessage{
 		Type: contracts.DriverCmdRegister,
 		Data: driverData.Driver,
 	}); err != nil {
-
 		log.Printf("error_sending_message: %v", err)
 		return
 	}
@@ -168,6 +179,31 @@ func (t *WsHandler) HandleDriverWebSocket(w http.ResponseWriter, r *http.Request
 		if err != nil {
 			log.Printf("error_reading_message: %v\n", err)
 			break
+		}
+
+		type driverMessage struct {
+			Type string          `json:"type"`
+			Data json.RawMessage `json:"data"`
+		}
+
+		var driverMsg driverMessage
+		if err := json.Unmarshal(message, &driverMsg); err != nil {
+			log.Printf("error_unmarshaling_driver_message: %v", err)
+			continue
+		}
+
+		switch driverMsg.Type {
+		case contracts.DriverCmdLocation:
+			continue
+		case contracts.DriverCmdTripAccept, contracts.DriverCmdTripDecline:
+			if err := t.rabbitMq.PublishingMessage(ctx, driverMsg.Type, contracts.AmqpMessage{
+				OwnerID: userId,
+				Data:    driverMsg.Data,
+			}); err != nil {
+				log.Printf("Error_publishing_message_to_rabbitMQ: %v", err)
+			}
+		default:
+			log.Printf("Unknown_message_type: %s", driverMsg.Type)
 		}
 
 		log.Printf("received_messages: %s", message)

@@ -65,6 +65,7 @@ func (t *WsHandler) HandlerRidersWebSocket(w http.ResponseWriter, r *http.Reques
 	// Initialize queue consumers
 	queues := []string{
 		messaging.NotifyDriverNoDriversFoundQueue,
+		messaging.NotifyDriverAssignQueue,
 	}
 
 	for _, q := range queues {

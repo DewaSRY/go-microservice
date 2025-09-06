@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"ride-sharing/services/trip-service/pkg/types"
+	pbd "ride-sharing/shared/proto/driver"
 )
 
 type InMemoryRepository struct {
@@ -38,4 +39,31 @@ func (r *InMemoryRepository) GetFareById(ctx context.Context, fareId string) (*t
 
 	return fare, nil
 
+}
+
+func (r *InMemoryRepository) GetTripByID(ctx context.Context, id string) (*types.TripModel, error) {
+	trip, ok := r.trip[id]
+	if !ok {
+		return nil, nil
+	}
+	return trip, nil
+}
+
+func (r *InMemoryRepository) UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error {
+	trip, ok := r.trip[tripID]
+	if !ok {
+		return fmt.Errorf("trip not found with ID: %s", tripID)
+	}
+
+	trip.Status = status
+
+	if driver != nil {
+		trip.Driver = &types.TripDriver{
+			Id:             driver.Id,
+			Name:           driver.Name,
+			ProfilePicture: driver.ProfilePicture,
+			CartPlate:      driver.CarPlate,
+		}
+	}
+	return nil
 }

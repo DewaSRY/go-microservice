@@ -8,9 +8,14 @@ import (
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/util"
 
+	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/proto/driver"
 
 	"github.com/gorilla/websocket"
+)
+
+var (
+	connManager = messaging.NewConnectionManager()
 )
 
 var upgrader = websocket.Upgrader{
@@ -29,7 +34,8 @@ type Driver struct {
 
 func HandlerRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("connect ")
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := connManager.Upgrade(w, r)
+
 	if err != nil {
 		log.Printf("websocket_upgrade_failed :%v", err)
 		return
@@ -42,6 +48,10 @@ func HandlerRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer conn.Close()
+
+	// Add connection to manager
+	connManager.Add(userId, conn)
+	defer connManager.Remove(userId)
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -56,7 +66,7 @@ func HandlerRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := connManager.Upgrade(w, r)
 
 	if err != nil {
 		log.Printf("WebSocket upgrade failed :%v", err)
@@ -74,6 +84,9 @@ func HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Println("no_package_slug_provided")
 		return
 	}
+
+	// Add connection to manager
+	connManager.Add(userId, conn)
 
 	msg := contracts.WSMessage{
 		Type: "driver.cmd.register",
@@ -100,6 +113,7 @@ func HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer func() {
+		connManager.Remove(userId)
 		driverService.Client.UnRegisterDriver(ctx, &driver.RegisterDriverRequest{
 			DriverId:    userId,
 			PackageSlug: packageSlug,
@@ -118,6 +132,15 @@ func HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Print(driverData)
+
+	if err := connManager.SendMessage(userId, contracts.WSMessage{
+		Type: contracts.DriverCmdRegister,
+		Data: driverData.Driver,
+	}); err != nil {
+
+		log.Printf("error_sending_message: %v", err)
+		return
+	}
 
 	for {
 		_, message, err := conn.ReadMessage()

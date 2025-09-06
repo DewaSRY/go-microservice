@@ -57,6 +57,7 @@ func (r *RabbitMQ) setupExchangesAndQueues() error {
 		false,        // no-wait
 		nil,          // arguments
 	)
+
 	if err != nil {
 		return fmt.Errorf("failed to declare exchange: %s: %v", TripExchange, err)
 	}

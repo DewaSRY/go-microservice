@@ -32,7 +32,15 @@ type Driver struct {
 	PackageSlug    string `json:"packageSlug"`
 }
 
-func HandlerRidersWebSocket(w http.ResponseWriter, r *http.Request) {
+type WsHandler struct {
+	rabbitMq *messaging.RabbitMQ
+}
+
+func NewWsHandler(rabbitmq *messaging.RabbitMQ) *WsHandler {
+	return &WsHandler{rabbitMq: rabbitmq}
+}
+
+func (t *WsHandler) HandlerRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("connect ")
 	conn, err := connManager.Upgrade(w, r)
 
@@ -65,7 +73,7 @@ func HandlerRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
+func (t *WsHandler) HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := connManager.Upgrade(w, r)
 
 	if err != nil {
@@ -140,6 +148,18 @@ func HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("error_sending_message: %v", err)
 		return
+	}
+
+	queues := []string{
+		messaging.DriverCmdTripRequestQueue,
+	}
+
+	for _, q := range queues {
+		consumer := messaging.NewQueueConsumer(t.rabbitMq, connManager, q)
+
+		if err := consumer.Start(); err != nil {
+			log.Printf("failed_to_start_consumer_for_queue: %s: err: %v", q, err)
+		}
 	}
 
 	for {

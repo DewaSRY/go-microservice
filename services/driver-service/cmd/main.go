@@ -44,7 +44,7 @@ func main() {
 	}
 	defer rabbit.Close()
 
-	tripConsumer := events.NewTripConsumer(rabbit)
+	tripConsumer := events.NewTripConsumer(rabbit, driverService)
 
 	go func() {
 		if err := tripConsumer.Listen(); err != nil {

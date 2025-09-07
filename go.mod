@@ -10,6 +10,7 @@ require (
 require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
+	github.com/stripe/stripe-go/v81 v81.4.0 // indirect
 	go.opentelemetry.io/otel v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
 )

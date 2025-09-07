@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"ride-sharing/services/payment-service/internal/service"
+	"ride-sharing/services/payment-service/internal/stripe"
 	"ride-sharing/services/payment-service/pkg/types"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
@@ -50,6 +52,12 @@ func main() {
 	defer rabbitmq.Close()
 
 	log.Println("Starting RabbitMQ connection")
+
+	paymentProcessor := stripe.NewStripeClient(stripeCfg)
+
+	// Service
+	svc := service.NewPaymentService(paymentProcessor)
+	log.Println(svc)
 
 	// Wait for shutdown signal
 	<-ctx.Done()

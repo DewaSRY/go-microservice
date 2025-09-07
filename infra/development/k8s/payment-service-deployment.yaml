@@ -29,21 +29,20 @@ spec:
           env:
             - name: STRIPE_SUCCESS_URL
               valueFrom:
-                configMapKeyRef:
-                  name: app-config
+                secretKeyRef:
+                  name: stripe-config
                   key: STRIPE_SUCCESS_URL
             - name: STRIPE_CANCEL_URL
               valueFrom:
-                configMapKeyRef:
-                  name: app-config
+                secretKeyRef:
+                  name: stripe-config
                   key: STRIPE_CANCEL_URL
-
             # Stripe credentials
-            # - name: STRIPE_SECRET_KEY
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: stripe-secrets
-            #       key: stripe-secret-key
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-config
+                  key: STRIPE_SECRET_KEY
 
             # RabbitMQ credentials
             - name: RABBITMQ_URI

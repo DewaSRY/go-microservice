@@ -66,6 +66,7 @@ func (t *WsHandler) HandlerRidersWebSocket(w http.ResponseWriter, r *http.Reques
 	queues := []string{
 		messaging.NotifyDriverNoDriversFoundQueue,
 		messaging.NotifyDriverAssignQueue,
+		messaging.NotifyPaymentSessionCreatedQueue,
 	}
 
 	for _, q := range queues {
@@ -80,7 +81,7 @@ func (t *WsHandler) HandlerRidersWebSocket(w http.ResponseWriter, r *http.Reques
 		_, message, err := conn.ReadMessage()
 
 		if err != nil {
-			log.Printf("error_reading_message: %v\n", err)
+			log.Printf("error_reading_rider_message: %v\n", err)
 			break
 		}
 
@@ -178,7 +179,7 @@ func (t *WsHandler) HandleDriverWebSocket(w http.ResponseWriter, r *http.Request
 		_, message, err := conn.ReadMessage()
 
 		if err != nil {
-			log.Printf("error_reading_message: %v\n", err)
+			log.Printf("error_reading_driver_message: %v\n", err)
 			break
 		}
 

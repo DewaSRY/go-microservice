@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"ride-sharing/services/payment-service/internal/infrastructure/events"
 	"ride-sharing/services/payment-service/internal/service"
 	"ride-sharing/services/payment-service/internal/stripe"
 	"ride-sharing/services/payment-service/pkg/types"
@@ -58,6 +59,10 @@ func main() {
 	// Service
 	svc := service.NewPaymentService(paymentProcessor)
 	log.Println(svc)
+
+	// Trip Consumer
+	tripConsumer := events.NewTripConsumer(rabbitmq, svc)
+	go tripConsumer.Listen()
 
 	// Wait for shutdown signal
 	<-ctx.Done()

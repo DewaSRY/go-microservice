@@ -10,7 +10,14 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type RabbitMQ struct {
+type RabbitMQClient interface {
+	PublishingMessage(ctx context.Context, routingKey string, message contracts.AmqpMessage) error
+	ConsumeMessages(queueName string, handler MessageHandler) error
+	CreateConsumer(queueName string, autoAck bool, exclusive bool, noLocal bool, noWait bool) (<-chan amqp.Delivery, error)
+	Close()
+}
+
+type rabbitMQClientImpl struct {
 	conn    *amqp.Connection
 	Channel *amqp.Channel
 }
@@ -21,7 +28,7 @@ const (
 
 type MessageHandler func(context.Context, amqp.Delivery) error
 
-func NewRabbitMQ(urlString string) (*RabbitMQ, error) {
+func NewRabbitMQ(urlString string) (RabbitMQClient, error) {
 	conn, err := amqp.Dial(urlString)
 	if err != nil {
 		return nil, fmt.Errorf("failed_connect_to_rabbitmq")
@@ -34,7 +41,7 @@ func NewRabbitMQ(urlString string) (*RabbitMQ, error) {
 		return nil, fmt.Errorf("failed_to_create_channel")
 	}
 
-	rmq := &RabbitMQ{
+	rmq := &rabbitMQClientImpl{
 		conn:    conn,
 		Channel: ch,
 	}
@@ -47,7 +54,33 @@ func NewRabbitMQ(urlString string) (*RabbitMQ, error) {
 	return rmq, nil
 }
 
-func (r *RabbitMQ) setupExchangesAndQueues() error {
+func NewRabbitMQ2(urlString string) (*rabbitMQClientImpl, error) {
+	conn, err := amqp.Dial(urlString)
+	if err != nil {
+		return nil, fmt.Errorf("failed_connect_to_rabbitmq")
+	}
+
+	ch, err := conn.Channel()
+
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("failed_to_create_channel")
+	}
+
+	rmq := &rabbitMQClientImpl{
+		conn:    conn,
+		Channel: ch,
+	}
+
+	if err := rmq.setupExchangesAndQueues(); err != nil {
+		rmq.Close()
+		return nil, fmt.Errorf("failed_to_setup_and_exchange_queue")
+	}
+
+	return rmq, nil
+}
+
+func (r *rabbitMQClientImpl) setupExchangesAndQueues() error {
 	err := r.Channel.ExchangeDeclare(
 		TripExchange, // name
 		"topic",      // type
@@ -123,7 +156,7 @@ func (r *RabbitMQ) setupExchangesAndQueues() error {
 	return nil
 }
 
-func (r *RabbitMQ) PublishingMessage(ctx context.Context, routingKey string, message contracts.AmqpMessage) error {
+func (r *rabbitMQClientImpl) PublishingMessage(ctx context.Context, routingKey string, message contracts.AmqpMessage) error {
 
 	jsonMsg, err := json.Marshal(message)
 	if err != nil {
@@ -143,8 +176,19 @@ func (r *RabbitMQ) PublishingMessage(ctx context.Context, routingKey string, mes
 		})
 }
 
-func (r *RabbitMQ) ConsumeMessages(queueName string, handler MessageHandler) error {
+func (r *rabbitMQClientImpl) CreateConsumer(queueName string, autoAck bool, exclusive bool, noLocal bool, noWait bool) (<-chan amqp.Delivery, error) {
+	return r.Channel.Consume(
+		queueName, // queue
+		"",        // consumer
+		false,     //auto-ack
+		false,     //exclusive
+		false,     //no-local
+		false,     //no-await
+		nil,       //args
+	)
+}
 
+func (r *rabbitMQClientImpl) ConsumeMessages(queueName string, handler MessageHandler) error {
 	// Set prefetch count to 1 for fair dispatch
 	// This tells RabbitMQ not to give more than one message to a service at a time.
 	// The worker will only get the next message after it has acknowledged the previous one.
@@ -154,17 +198,15 @@ func (r *RabbitMQ) ConsumeMessages(queueName string, handler MessageHandler) err
 		false, // global: Apply prefetchCount to each consumer individually
 	)
 	if err != nil {
-		return fmt.Errorf("failed to set QoS: %v", err)
+		return fmt.Errorf("failed_to_set_QoS: %v", err)
 	}
 
-	msgs, err := r.Channel.Consume(
+	msgs, err := r.CreateConsumer(
 		queueName, // queue
-		"",        // consumer
 		false,     //auto-ack
 		false,     //exclusive
 		false,     //no-local
 		false,     //no-await
-		nil,       //args
 	)
 
 	if err != nil {
@@ -196,7 +238,7 @@ func (r *RabbitMQ) ConsumeMessages(queueName string, handler MessageHandler) err
 	return nil
 }
 
-func (r *RabbitMQ) declareAndBindQueue(queueName string, messageTypes []string, exchange string) error {
+func (r *rabbitMQClientImpl) declareAndBindQueue(queueName string, messageTypes []string, exchange string) error {
 	q, err := r.Channel.QueueDeclare(
 		queueName, // name
 		true,      // durable
@@ -217,14 +259,14 @@ func (r *RabbitMQ) declareAndBindQueue(queueName string, messageTypes []string, 
 			false,
 			nil,
 		); err != nil {
-			return fmt.Errorf("failed to bind queue to %s: %v", queueName, err)
+			return fmt.Errorf("failed_to_bind_queue_to %s: %v", queueName, err)
 		}
 	}
 
 	return nil
 }
 
-func (r *RabbitMQ) Close() {
+func (r *rabbitMQClientImpl) Close() {
 	if r.conn != nil {
 		r.conn.Close()
 	}

@@ -8,6 +8,7 @@ import (
 	"ride-sharing/services/api-gateway/internal/infrastructure/ws"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
+	"ride-sharing/shared/middleware"
 )
 
 var (
@@ -34,8 +35,8 @@ func main() {
 
 	wsHandler := ws.NewWsHandler(rabbitmq)
 
-	mux.HandleFunc("POST /trip/preview", enableCORS(internalHttp.HandleTripPreview))
-	mux.HandleFunc("POST /trip/start", enableCORS(internalHttp.HandleTripStart))
+	mux.HandleFunc("POST /trip/preview", middleware.EnableCORS(internalHttp.HandleTripPreview))
+	mux.HandleFunc("POST /trip/start", middleware.EnableCORS(internalHttp.HandleTripStart))
 
 	mux.HandleFunc("/ws/riders", wsHandler.HandlerRidersWebSocket)
 	mux.HandleFunc("/ws/drivers", wsHandler.HandleDriverWebSocket)

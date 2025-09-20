@@ -5,25 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	grpcClient "ride-sharing/services/api-gateway/grpc_client"
+	grpcClient "ride-sharing/services/api-gateway/internal/services"
 	"ride-sharing/shared/contracts"
+	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/util"
 
-	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/proto/driver"
-
-	"github.com/gorilla/websocket"
+	wsManager "ride-sharing/shared/ws"
 )
 
 var (
-	connManager = messaging.NewConnectionManager()
+	connManager = wsManager.NewConnectionManager()
 )
-
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
 
 type Driver struct {
 	Id             string `json:"id"`
@@ -34,16 +27,16 @@ type Driver struct {
 }
 
 type WsHandler struct {
-	rabbitMq *messaging.RabbitMQ
+	rabbitMq messaging.RabbitMQClient
 }
 
-func NewWsHandler(rabbitmq *messaging.RabbitMQ) *WsHandler {
+func NewWsHandler(rabbitmq messaging.RabbitMQClient) *WsHandler {
 	return &WsHandler{rabbitMq: rabbitmq}
 }
 
 func (t *WsHandler) HandlerRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("connect ")
-	conn, err := connManager.Upgrade(w, r)
+	conn, err := connManager.InitUpgrade(w, r)
 
 	if err != nil {
 		log.Printf("websocket_upgrade_failed :%v", err)
@@ -90,7 +83,7 @@ func (t *WsHandler) HandlerRidersWebSocket(w http.ResponseWriter, r *http.Reques
 }
 
 func (t *WsHandler) HandleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := connManager.Upgrade(w, r)
+	conn, err := connManager.InitUpgrade(w, r)
 
 	if err != nil {
 		log.Printf("WebSocket upgrade failed :%v", err)
@@ -155,7 +148,7 @@ func (t *WsHandler) HandleDriverWebSocket(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := connManager.SendMessage(userId, contracts.WSMessage{
+	if err := connManager.Emit(userId, contracts.WSMessage{
 		Type: contracts.DriverCmdRegister,
 		Data: driverData.Driver,
 	}); err != nil {

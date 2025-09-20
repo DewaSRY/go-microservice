@@ -13,7 +13,7 @@ k8s_resource('rabbitmq', port_forwards=['5672:5672', '15672:15672'], labels='too
 ### End of K8s Config ###
 
 ### API Gateway ###
-gateway_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/api-gateway ./services/api-gateway'
+gateway_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/api-gateway ./services/api-gateway/cmd/main.go'
 if os.name == 'nt':
   gateway_compile_cmd = './infra/development/docker/api-gateway-build.bat'
 

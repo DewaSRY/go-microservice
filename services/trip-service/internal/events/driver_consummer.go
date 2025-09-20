@@ -14,11 +14,11 @@ import (
 )
 
 type driverConsumer struct {
-	rabbitmq *messaging.RabbitMQ
+	rabbitmq messaging.RabbitMQClient
 	service  domain.TripService
 }
 
-func NewDriverConsumer(rabbitmq *messaging.RabbitMQ, service domain.TripService) *driverConsumer {
+func NewDriverConsumer(rabbitmq messaging.RabbitMQClient, service domain.TripService) *driverConsumer {
 	return &driverConsumer{
 		rabbitmq: rabbitmq,
 		service:  service,

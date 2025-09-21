@@ -47,7 +47,7 @@ func main() {
 
 	rabbitmq, err := messaging.NewRabbitMQ(rabbitmqUri)
 	if err != nil {
-		log.Fatal("failed_to_connect_to_rabbitmq: ")
+		log.Fatalf("failed_to_connect_to_rabbitmq: %v", err)
 	}
 	defer rabbitmq.Close()
 

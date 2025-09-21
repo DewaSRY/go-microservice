@@ -5,32 +5,36 @@ import (
 	"log"
 
 	"ride-sharing/shared/contracts"
+	"ride-sharing/shared/ws"
 )
 
-type QueueConsumer struct {
-	rb        *RabbitMQ
-	connMgr   *ConnectionManager
+type QueueConsumer interface {
+	Start() error
+}
+
+type queueConsumer struct {
+	rb        RabbitMQClient
+	connMgr   ws.ConnectionManager
 	queueName string
 }
 
-func NewQueueConsumer(rb *RabbitMQ, connMgr *ConnectionManager, queueName string) *QueueConsumer {
-	return &QueueConsumer{
+func NewQueueConsumer(rb RabbitMQClient, connMgr ws.ConnectionManager, queueName string) QueueConsumer {
+	return &queueConsumer{
 		rb:        rb,
 		connMgr:   connMgr,
 		queueName: queueName,
 	}
 }
 
-func (qc *QueueConsumer) Start() error {
-	msgs, err := qc.rb.Channel.Consume(
+func (qc *queueConsumer) Start() error {
+	msgs, err := qc.rb.CreateConsumer(
 		qc.queueName,
-		"",
 		true,
 		false,
 		false,
 		false,
-		nil,
 	)
+
 	if err != nil {
 		return err
 	}
@@ -58,7 +62,7 @@ func (qc *QueueConsumer) Start() error {
 				Data: payload,
 			}
 
-			if err := qc.connMgr.SendMessage(userID, clientMsg); err != nil {
+			if err := qc.connMgr.Emit(userID, clientMsg); err != nil {
 				log.Printf("Failed to send message to user %s: %v", userID, err)
 			}
 		}

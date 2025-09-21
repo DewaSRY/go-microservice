@@ -12,17 +12,15 @@ import (
 )
 
 type paymentService struct {
-	paymentProcessor domain.PaymentProcessor
+	PaymentProcessorService domain.PaymentProcessorServiceService
 }
 
-// NewPaymentService creates a new instance of the payment service
-func NewPaymentService(paymentProcessor domain.PaymentProcessor) domain.Service {
+func NewPaymentService(PaymentProcessorService domain.PaymentProcessorServiceService) domain.PaymentHandlerService {
 	return &paymentService{
-		paymentProcessor: paymentProcessor,
+		PaymentProcessorService: PaymentProcessorService,
 	}
 }
 
-// CreatePaymentSession creates a new payment session for a trip
 func (s *paymentService) CreatePaymentSession(
 	ctx context.Context,
 	tripID string,
@@ -37,7 +35,7 @@ func (s *paymentService) CreatePaymentSession(
 		"driver_id": driverID,
 	}
 
-	sessionID, err := s.paymentProcessor.CreatePaymentSession(ctx, amount, currency, metadata)
+	sessionID, err := s.PaymentProcessorService.CreatePaymentSession(ctx, amount, currency, metadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create payment session: %w", err)
 	}

@@ -1,53 +1,56 @@
-import { PaymentEventSessionCreatedData } from "../contracts"
-import { Button } from "./ui/button"
-import { loadStripe } from "@stripe/stripe-js"
+"use client";
 
+import { PaymentEventSessionCreatedData } from "../contracts";
+import { Button } from "./ui/button";
+import { loadStripe } from "@stripe/stripe-js";
+import { useRouter } from "next/navigation";
 interface StripePaymentButtonProps {
-  paymentSession: PaymentEventSessionCreatedData
-  isLoading?: boolean
+  paymentSession: PaymentEventSessionCreatedData;
+  isLoading?: boolean;
 }
 
 // Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 export const StripePaymentButton = ({
   paymentSession,
   isLoading = false,
 }: StripePaymentButtonProps) => {
+  const router = useRouter();
+
   const handlePayment = async () => {
-    const stripe = await stripePromise
+    const stripe = await stripePromise;
 
     if (!stripe) {
-      console.error("Stripe failed to load")
-      return
+      console.error("Stripe failed to load");
+      return;
     }
+
+    router.push("?payment=success");
 
     // Redirect to Stripe Checkout
-    const { error } = await stripe.redirectToCheckout({ sessionId: paymentSession.sessionID })
+    // const { error } = await stripe.redirectToCheckout({ sessionId: paymentSession.sessionID })
 
-    if (error) {
-      console.error("Payment error:", error)
-    }
-  }
+    // if (error) {
+    //   console.error("Payment error:", error)
+    // }
+  };
 
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
     return (
-      <Button
-        disabled
-        className="w-full bg-red-500 text-white"
-      >
+      <Button disabled className="w-full bg-red-500 text-white">
         Stripe API KEY is not set on the NEXTJS app
       </Button>
-    )
+    );
   }
 
   return (
-    <Button
-      onClick={handlePayment}
-      disabled={isLoading}
-      className="w-full"
-    >
-      {isLoading ? "Loading..." : `Pay ${paymentSession.amount} ${paymentSession.currency}`}
+    <Button onClick={handlePayment} disabled={isLoading} className="w-full">
+      {isLoading
+        ? "Loading..."
+        : `Pay ${paymentSession.amount} ${paymentSession.currency}`}
     </Button>
-  )
-} 
+  );
+};

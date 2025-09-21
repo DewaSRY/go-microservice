@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	grpcClient "ride-sharing/services/api-gateway/grpc_client"
+	grpcClient "ride-sharing/services/api-gateway/internal/services"
 	"ride-sharing/shared/contracts"
 
 	"ride-sharing/services/api-gateway/pkg/types"

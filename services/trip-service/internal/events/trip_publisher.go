@@ -9,10 +9,10 @@ import (
 )
 
 type TripEventPublisher struct {
-	rabbit *messaging.RabbitMQ
+	rabbit messaging.RabbitMQClient
 }
 
-func NewTripEventPublisher(rabbitmq *messaging.RabbitMQ) *TripEventPublisher {
+func NewTripEventPublisher(rabbitmq messaging.RabbitMQClient) *TripEventPublisher {
 	return &TripEventPublisher{rabbit: rabbitmq}
 }
 

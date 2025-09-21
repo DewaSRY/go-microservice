@@ -86,7 +86,7 @@ func (t *WsHandler) HandleDriverWebSocket(w http.ResponseWriter, r *http.Request
 	conn, err := connManager.InitUpgrade(w, r)
 
 	if err != nil {
-		log.Printf("WebSocket upgrade failed :%v", err)
+		log.Printf("webSocket_upgrade_failed :%v", err)
 		return
 	}
 

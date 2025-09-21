@@ -9,18 +9,17 @@ import (
 
 	"ride-sharing/services/payment-service/internal/infrastructure/events"
 	"ride-sharing/services/payment-service/internal/service"
-	"ride-sharing/services/payment-service/internal/stripe"
 	"ride-sharing/services/payment-service/pkg/types"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
 )
 
-var GrpcAddr = env.GetString("GRPC_ADDR", ":9004")
+var (
+	GrpcAddr    = env.GetString("GRPC_ADDR", ":9004")
+	rabbitMqURI = env.GetString("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672/")
+)
 
 func main() {
-	rabbitMqURI := env.GetString("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672/")
-
-	// Setup graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -54,10 +53,11 @@ func main() {
 
 	log.Println("Starting RabbitMQ connection")
 
-	paymentProcessor := stripe.NewStripeClient(stripeCfg)
+	// PaymentProcessorService := service.NewStripeClient(stripeCfg)
+	PaymentProcessorService := service.NewDumpClient(stripeCfg)
 
 	// Service
-	svc := service.NewPaymentService(paymentProcessor)
+	svc := service.NewPaymentService(PaymentProcessorService)
 	log.Println(svc)
 
 	// Trip Consumer

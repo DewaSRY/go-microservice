@@ -14,10 +14,10 @@ import (
 
 type TripConsumer struct {
 	rabbitmq messaging.RabbitMQClient
-	service  domain.Service
+	service  domain.PaymentHandlerService
 }
 
-func NewTripConsumer(rabbitmq messaging.RabbitMQClient, service domain.Service) *TripConsumer {
+func NewTripConsumer(rabbitmq messaging.RabbitMQClient, service domain.PaymentHandlerService) *TripConsumer {
 	return &TripConsumer{
 		rabbitmq: rabbitmq,
 		service:  service,
@@ -61,6 +61,7 @@ func (c *TripConsumer) handleTripAccepted(ctx context.Context, payload messaging
 		int64(payload.Amount),
 		payload.Currency,
 	)
+
 	if err != nil {
 		log.Printf("Failed to create payment session: %v", err)
 		return err

@@ -44,12 +44,12 @@ func (c *driverConsumer) Listen() error {
 		switch msg.RoutingKey {
 		case contracts.DriverCmdTripAccept:
 			if err := c.handleTripAccepted(ctx, payload.TripID, payload.Driver); err != nil {
-				log.Printf("Failed to handle the trip accept: %v", err)
+				log.Printf("failed_to_handle_the_trip_accept: %v", err)
 				return err
 			}
 		case contracts.DriverCmdTripDecline:
 			if err := c.handleTripDeclined(ctx, payload.TripID, payload.RiderID); err != nil {
-				log.Printf("Failed to handle the trip decline: %v", err)
+				log.Printf("failed_to_handle_the_trip_decline: %v", err)
 				return err
 			}
 			return nil
@@ -73,7 +73,7 @@ func (c *driverConsumer) handleTripAccepted(ctx context.Context, tripID string, 
 
 	// 2. Update the trip
 	if err := c.service.UpdateTrip(ctx, tripID, "accepted", driver); err != nil {
-		log.Printf("Failed to update the trip: %v", err)
+		log.Printf("failed_to_update_the_trip: %v", err)
 		return err
 	}
 

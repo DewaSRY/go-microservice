@@ -1,8 +1,9 @@
-package stripe
+package service
 
 import (
 	"context"
 	"fmt"
+	"ride-sharing/services/payment-service/internal/domain"
 	"ride-sharing/services/payment-service/pkg/types"
 
 	"github.com/stripe/stripe-go/v81"
@@ -13,7 +14,7 @@ type stripeClient struct {
 	config *types.PaymentConfig
 }
 
-func NewStripeClient(config *types.PaymentConfig) *stripeClient {
+func NewStripeClient(config *types.PaymentConfig) domain.PaymentProcessorServiceService {
 	stripe.Key = config.StripeSecretKey
 
 	return &stripeClient{

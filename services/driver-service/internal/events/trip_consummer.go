@@ -51,24 +51,21 @@ func (t *TripEventConsumer) Listen() error {
 func (t *TripEventConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload messaging.TripEventData) error {
 	suitableIDs := t.service.FindAvailableDrivers(payload.Trip.SelectedFare.PackageSlug)
 
-	log.Printf("Found suitable drivers %v", len(suitableIDs))
+	log.Printf("found_suitable_drivers %v", len(suitableIDs))
 
 	if len(suitableIDs) == 0 {
-		// Notify the driver that no drivers are available
 		if err := t.rabbitmq.PublishingMessage(ctx, contracts.TripEventNoDriversFound, contracts.AmqpMessage{
 			OwnerID: payload.Trip.UserID,
 		}); err != nil {
-			log.Printf("Failed to publish message to exchange: %v", err)
+			log.Printf("failed_to_publish_message_to_exchange: %v", err)
 			return err
 		}
 
 		return nil
 	}
 
-	// suitableDriverID := suitableIDs[0]
 	randomIndex := rand.Intn(len(suitableIDs))
 	suitableDriverID := suitableIDs[randomIndex]
-
 	marshalledEvent, err := json.Marshal(payload)
 	if err != nil {
 		return err
